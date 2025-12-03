@@ -11,8 +11,6 @@ L82|}
 
 let () =
   let open Aoc2025.Day1 in
-  (* or just Day1 if not namespaced *)
-
   (* Prepare inputs *)
   let sample_input = parse_input (String.split_on_char '\n' sample) in
   let input = parse_input (read_lines "inputs/1.txt") in

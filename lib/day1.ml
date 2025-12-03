@@ -21,10 +21,10 @@ let parse_line input =
   let dir, amount = head_and_tail_of_string input in
   { direction = dir; amount = int_of_string amount }
 
-let parse_rotation instruction =
-  match instruction.direction with
-  | 'L' -> -1 * instruction.amount
-  | 'R' -> instruction.amount
+let parse_rotation { direction; amount } =
+  match direction with
+  | 'L' -> -amount
+  | 'R' -> amount
   | _ -> failwith "Unrecognised rotation"
 
 let rec part_1' curr_state instructions acc =
@@ -46,24 +46,19 @@ let calculate_clicks curr_state raw_rotation =
   let new_state = positive_mod new_state_before 100 in
   (*the total number of clicks should be the distace between the old state and new state divided by 100*)
   let total_full_loops = abs (new_state_before - curr_state) / 100 in
+  let wrapped =
+    (raw_rotation.direction = 'L' && new_state > curr_state)
+    || (raw_rotation.direction = 'R' && new_state < curr_state)
+  in
   let extra_crossings =
+    (*If we end on a zero, count it*)
     if new_state = 0 then 1
+      (*If we were already on a zero, then won't count as a crossing*)
     else if curr_state = 0 then 0
-    else if
-      (raw_rotation.direction = 'L' && new_state > curr_state)
-      || (raw_rotation.direction = 'R' && new_state < curr_state)
-    then 1
+      (*If we have to go through zero to meet the new state, then we cross*)
+    else if wrapped then 1
     else 0
   in
-  let total_clicks = total_full_loops + extra_crossings in
-  let _ =
-    Printf.printf
-      "Old state: %d\t Instruction: %c%d\t New state: %d\t Total crossings: \
-       %d\t (Full loops: %d  \tExtra crossings: %d)\n"
-      curr_state raw_rotation.direction raw_rotation.amount new_state
-      total_clicks total_full_loops extra_crossings
-  in
-  (*Total clicks, New state*)
   (new_state, total_full_loops + extra_crossings)
 
 let rec part_2' curr_state instructions acc =
@@ -71,9 +66,7 @@ let rec part_2' curr_state instructions acc =
   | [] -> acc
   | instruction :: instructions ->
       let new_state, num_clicks = calculate_clicks curr_state instruction in
-      let new_accumulator = acc + num_clicks in
-
-      part_2' new_state instructions new_accumulator
+      part_2' new_state instructions acc + num_clicks
 
 let part_2 instructions = part_2' 50 instructions 0
 
