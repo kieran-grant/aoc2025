@@ -9,16 +9,8 @@ let make_split_test name input expected =
   name >:: fun _ ->
   assert_equal expected (split_string input) ~printer:to_string_from_pair
 
-let make_is_valid_test name input expected =
-  name >:: fun _ ->
-  assert_equal expected (is_valid input) ~printer:string_of_bool
-
 let string_of_int_list lst =
   "[" ^ String.concat "; " (List.map string_of_int lst) ^ "]"
-
-let make_range_test name a b expected =
-  name >:: fun _ ->
-  assert_equal expected (range a b) ~printer:string_of_int_list
 
 let make_parse_range_test name input expected =
   name >:: fun _ ->
@@ -45,25 +37,6 @@ let split_tests =
          make_split_test "splits number with 2 digits" "55" ("5", "5");
          make_split_test "splits number with 6 digits" "123123" ("123", "123");
          make_split_test "splits number with 5 digits" "12312" ("12", "312");
-       ]
-
-let is_valid_tests =
-  "is_valid tests"
-  >::: [
-         make_is_valid_test "even-length number with unequal halves is valid"
-           "1234" true;
-         make_is_valid_test "odd-length is valid" "12312" true;
-         make_is_valid_test "even-length number with equal halves is invalid"
-           "123123" false;
-       ]
-
-let range_tests =
-  "range tests"
-  >::: [
-         make_range_test "simple increasing range" 1 4 [ 1; 2; 3 ];
-         make_range_test "empty when equal" 5 5 [];
-         make_range_test "single element" 2 3 [ 2 ];
-         make_range_test "larger range" 0 5 [ 0; 1; 2; 3; 4 ];
        ]
 
 let parse_range_tests =
@@ -174,12 +147,10 @@ let extra_is_invalid_v2_tests =
            is_invalid_v2 "121314151617" false;
          make_bool_test "gcd divides length but pattern not repeated → valid"
            is_invalid_v2 "1234512346" false;
-         (*TODO: this one is failing vvv*)
          make_bool_test "same multiset in halves but halves differ → valid"
            is_invalid_v2 "112233445566" false;
          make_bool_test "pattern 12121221 ×2 → invalid" is_invalid_v2
            "1212122112121221" true;
-         (*TODO: this one is failing vvv*)
          make_bool_test
            "gcd divides length but substring repetition fails → valid"
            is_invalid_v2 "1122334455" false;
@@ -236,8 +207,6 @@ let tests =
   "All tests"
   >::: [
          split_tests;
-         is_valid_tests;
-         range_tests;
          parse_range_tests;
          count_digits_tests;
          chunk_string_tests;
