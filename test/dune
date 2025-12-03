@@ -1,3 +1,7 @@
 (test
  (name test_day1)
  (libraries ounit2 aoc2025))
+
+(test
+ (name test_day2)
+ (libraries ounit2 aoc2025))

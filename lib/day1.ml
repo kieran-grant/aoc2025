@@ -69,8 +69,4 @@ let rec part_2' curr_state instructions acc =
       part_2' new_state instructions acc + num_clicks
 
 let part_2 instructions = part_2' 50 instructions 0
-
-let read_lines (file_name : string) : string list =
-  In_channel.with_open_text file_name In_channel.input_lines
-
 let parse_input raw_text = List.map parse_line raw_text
