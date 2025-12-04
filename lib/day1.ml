@@ -1,12 +1,8 @@
+open Core
+
 type instruction = { direction : char; amount : int }
 
 let positive_mod a n = ((a mod n) + n) mod n
-
-(**[explode s] takes in a string and returns it as a list of char*)
-let explode s = List.init (String.length s) (String.get s)
-
-(**[implode l] takes in a list of char and returns it as a string*)
-let implode l = String.of_seq (List.to_seq l)
 
 (**[head_and_tail_of_string] takes a string and returns the first character and
    the rest of the string*)

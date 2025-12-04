@@ -1,6 +1,7 @@
 open Core
 
 let max_of_list lst = List.fold_left max 0 lst
+let digit_of_char c = Char.code c - Char.code '0'
 
 let get_max_and_idx lst =
   let max_elem = max_of_list lst in
@@ -18,5 +19,7 @@ let solve_battery batteries =
   let second_max = max_of_list sublist in
   (max * 10) + second_max
 
-let part_1_pipeline line = explode line |> List.map int_of_char |> solve_battery
+let part_1_pipeline line =
+  explode line |> List.map digit_of_char |> solve_battery
+
 let part_1 input = List.map part_1_pipeline input |> sum
