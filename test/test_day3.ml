@@ -36,7 +36,7 @@ let battery_solver_tests =
 let part_1_pipeline_tests =
   "part 1 pipeline tests"
   >::: [
-         (*Part 1*)
+         (* Part 1 *)
          make_pipeline_test "Part 1 - Sample 1" 2 "987654321111111" 98;
          make_pipeline_test "Part 1 - Sample 2" 2 "811111111111119" 89;
          make_pipeline_test "Part 1 - Sample 3" 2 "234234234234278" 78;

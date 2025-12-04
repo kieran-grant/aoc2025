@@ -9,22 +9,29 @@ let get_max_and_idx lst =
   in
   (max_elem, idx_of_max)
 
+let calculate_window_size list target acc =
+  let list_len = List.length list in
+  let acc_len = List.length acc in
+  let answer = list_len - (target - (acc_len + 1)) in
+  answer
+
 let rec inner_loop target curr_list window_size acc =
   match curr_list with
   | [] -> acc
   | _ when List.length acc = target -> acc
-  (*TODO: We need another guard here, something like:
-
-
-  *)
+  | _ when window_size = 1 -> List.concat [ acc; curr_list ]
   | _ ->
       let sub_list = List.take window_size curr_list in
       let v, idx = get_max_and_idx sub_list in
       let new_list = List.drop (idx + 1) curr_list in
       let new_acc = List.concat [ acc; [ v ] ] in
-      inner_loop target new_list window_size new_acc
+      let new_window_size = calculate_window_size new_list target new_acc in
+      inner_loop target new_list new_window_size new_acc
 
-let solve_for n list = inner_loop n list (List.length list - (n - 1)) []
+let solve_for n list =
+  let acc = [] in
+  let window_length = calculate_window_size list n acc in
+  inner_loop n list window_length acc
 
 let solver_pipeline (n : int) (input : string) =
   (*Turn string into list of chars*)
