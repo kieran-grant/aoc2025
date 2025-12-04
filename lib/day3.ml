@@ -18,14 +18,25 @@ let calculate_window_size list target acc =
 let rec inner_loop target curr_list window_size acc =
   match curr_list with
   | [] -> acc
+  (*If we have the target number of elements in the accumulator, return*)
   | _ when List.length acc = target -> acc
+  (*If the window size is 1, we can just short circuit as there is no real logic to perform*)
   | _ when window_size = 1 -> List.concat [ acc; curr_list ]
   | _ ->
+      (*Take first [window_size] elements of the list*)
       let sub_list = List.take window_size curr_list in
+      (*Find the max value of this and its index*)
       let v, idx = get_max_and_idx sub_list in
+      (*Trim the first [idx + 1] elements from the list to create next list*)
       let new_list = List.drop (idx + 1) curr_list in
+      (*Add the max value we found to the accumulator*)
       let new_acc = List.concat [ acc; [ v ] ] in
+      (*
+      Calculate the new window size based on the remaining elements, 
+      our target, and the number of items in our accumulator
+      *)
       let new_window_size = calculate_window_size new_list target new_acc in
+      (*Recurse*)
       inner_loop target new_list new_window_size new_acc
 
 let solve_for n list =
