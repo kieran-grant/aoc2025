@@ -35,3 +35,10 @@ let explode s = List.init (String.length s) (String.get s)
 
 (**[implode l] takes in a list of char and returns it as a string*)
 let implode l = String.of_seq (List.to_seq l)
+
+let max_of_list lst = List.fold_left max 0 lst
+let digit_of_char c = Char.code c - Char.code '0'
+
+let char_of_digit n =
+  if n >= 0 && n <= 9 then Char.chr (n + Char.code '0')
+  else invalid_arg "digit_of_int: not a single digit"

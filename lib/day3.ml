@@ -1,8 +1,5 @@
 open Core
 
-let max_of_list lst = List.fold_left max 0 lst
-let digit_of_char c = Char.code c - Char.code '0'
-
 let get_max_and_idx lst =
   let max_elem = max_of_list lst in
   let idx_of_max =
@@ -12,14 +9,42 @@ let get_max_and_idx lst =
   in
   (max_elem, idx_of_max)
 
-let solve_battery batteries =
-  let initial_list = List.take (List.length batteries - 1) batteries in
-  let max, idx_of_max = get_max_and_idx initial_list in
-  let sublist = List.drop (idx_of_max + 1) batteries in
-  let second_max = max_of_list sublist in
-  (max * 10) + second_max
+let rec inner_loop target curr_list window_size acc =
+  match curr_list with
+  | [] -> acc
+  | _ when List.length acc = target -> acc
+  (*TODO: We need another guard here, something like:
 
-let part_1_pipeline line =
-  explode line |> List.map digit_of_char |> solve_battery
 
-let part_1 input = List.map part_1_pipeline input |> sum
+  *)
+  | _ ->
+      let sub_list = List.take window_size curr_list in
+      let v, idx = get_max_and_idx sub_list in
+      let new_list = List.drop (idx + 1) curr_list in
+      let new_acc = List.concat [ acc; [ v ] ] in
+      inner_loop target new_list window_size new_acc
+
+let solve_for n list = inner_loop n list (List.length list - (n - 1)) []
+
+let solver_pipeline (n : int) (input : string) =
+  (*Turn string into list of chars*)
+  Core.explode input
+  (*Turn list of chars into list of ints*)
+  |> List.map digit_of_char
+  (*Run solver on list*)
+  |> solve_for n
+  (*Convert ints back to chars*)
+  |> List.map char_of_digit
+  (*Convert list of chars to string*)
+  |> implode
+  (*Convert string to int*)
+  |> int_of_string
+
+let solve_for_all (n : int) (inputs : string list) =
+  List.map (solver_pipeline n) inputs |> sum
+
+(*Part 1, pick batteries*)
+let part_1 = solve_for_all 2
+
+(*Part 2, pick 12 batteries*)
+let part_2 = solve_for_all 12
