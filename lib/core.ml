@@ -29,3 +29,9 @@ let divisors n =
 
 let range a b = List.init (b - a) (( + ) a)
 let rec sum l = match l with [] -> 0 | hd :: tl -> hd + sum tl
+
+(**[explode s] takes in a string and returns it as a list of char*)
+let explode s = List.init (String.length s) (String.get s)
+
+(**[implode l] takes in a list of char and returns it as a string*)
+let implode l = String.of_seq (List.to_seq l)
