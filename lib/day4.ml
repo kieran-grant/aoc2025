@@ -41,19 +41,15 @@ let part_1 entries =
   (*Count the number of accessible rolls*)
   get_accessible_indices map |> List.length
 
-let replace map key value = PairMap.add key value map
-
-let replace_many map indices value =
-  List.fold_left (fun idx acc -> replace idx acc value) map indices
-
 let remove_rolls map indices = replace_many map indices '.'
 
 let rec part_2_loop curr_map acc =
   match get_accessible_indices curr_map with
+  (*No more accessible rolls, return the accumulator*)
   | [] -> acc
+  (*Remove the rolls that are accessible, add their count to the accumulator*)
   | xs -> part_2_loop (remove_rolls curr_map xs) (acc + List.length xs)
 
 let part_2 entries =
   let map = create_map entries in
-  (*Count the number of accessible rolls*)
   part_2_loop map 0

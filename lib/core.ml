@@ -80,6 +80,9 @@ let create_map entries =
     (fun row acc entry_string -> create_entries row acc entry_string)
     PairMap.empty entries
 
+let replace_many map indices value =
+  List.fold_left (fun acc idx -> PairMap.add idx value acc) map indices
+
 (*List printing helper*)
 let print_list print_elem lst =
   print_string "[";
