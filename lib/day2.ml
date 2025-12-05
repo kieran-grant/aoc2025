@@ -51,12 +51,6 @@ let is_invalid_v2 num_string =
     let common_divisor = gcd_list occurances in
     if common_divisor = 1 then false else try_divisors num_string common_divisor
 
-let parse_range input =
-  let items = String.split_on_char '-' input in
-  let start = int_of_string (List.nth items 0) in
-  let stop = int_of_string (List.nth items 1) in
-  range start (stop + 1)
-
 let parse_input input = String.split_on_char ',' input
 
 let part_maker is_invalid_fn input =

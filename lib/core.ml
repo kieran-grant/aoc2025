@@ -1,6 +1,13 @@
 let read_lines (file_name : string) : string list =
   In_channel.with_open_text file_name In_channel.input_lines
 
+let read_file filename =
+  let ic = open_in filename in
+  let n = in_channel_length ic in
+  let s = really_input_string ic n in
+  close_in ic;
+  s
+
 (* Euclidean algorithm for gcd of two ints *)
 let rec gcd a b = if b = 0 then abs a else gcd b (a mod b)
 
@@ -96,3 +103,28 @@ let print_list print_elem lst =
   in
   aux lst;
   print_endline "]"
+
+let parse_or_fail str =
+  match int_of_string_opt str with
+  | Some i -> i
+  | None -> failwith (str ^ " is not an integer!")
+
+let parse_hypenated_ints input =
+  let items = String.split_on_char '-' input in
+  let start = parse_or_fail (List.nth items 0) in
+  let stop = parse_or_fail (List.nth items 1) in
+  (start, stop)
+
+let parse_range input =
+  let start, stop = parse_hypenated_ints input in
+  range start (stop + 1)
+
+let split_on_blank_line s =
+  let lines = String.split_on_char '\n' s in
+  (* Find the blank line *)
+  let rec aux before = function
+    | [] -> (before, []) (* no blank line found *)
+    | "" :: rest -> (before, rest) (* split here *)
+    | x :: xs -> aux (before @ [ x ]) xs
+  in
+  aux [] lines
