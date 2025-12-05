@@ -28,13 +28,32 @@ let get_score map index =
 
 let is_accessible map idx = get_score map idx < 4
 
-let part_1 entries =
-  let map = create_map entries in
+let get_accessible_indices map =
   (*Get all the indices in the grid map*)
   keys map
   (*Filter out things that aren't a roll*)
   |> List.filter (is_a_roll map)
   (*Filter out rolls that are inaccessible*)
   |> List.filter (is_accessible map)
+
+let part_1 entries =
+  let map = create_map entries in
   (*Count the number of accessible rolls*)
-  |> List.length
+  get_accessible_indices map |> List.length
+
+let replace map key value = PairMap.add key value map
+
+let replace_many map indices value =
+  List.fold_left (fun idx acc -> replace idx acc value) map indices
+
+let remove_rolls map indices = replace_many map indices '.'
+
+let rec part_2_loop curr_map acc =
+  match get_accessible_indices curr_map with
+  | [] -> acc
+  | xs -> part_2_loop (remove_rolls curr_map xs) (acc + List.length xs)
+
+let part_2 entries =
+  let map = create_map entries in
+  (*Count the number of accessible rolls*)
+  part_2_loop map 0
