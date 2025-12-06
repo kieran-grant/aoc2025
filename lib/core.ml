@@ -128,3 +128,14 @@ let split_on_blank_line s =
     | x :: xs -> aux (before @ [ x ]) xs
   in
   aux [] lines
+
+(*transpose a list of lists*)
+let rec transpose list =
+  match list with
+  | [] -> []
+  | [] :: xss -> transpose xss
+  | (x :: xs) :: xss -> List.((x :: map hd xss) :: transpose (xs :: map tl xss))
+
+(*Flip a list of list horizontally*)
+let flip_horizontal xss = List.map List.rev xss
+let split_on_whitespace = Str.split (Str.regexp "[ \n\r\x0c\t]+")
