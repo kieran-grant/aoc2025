@@ -1,20 +1,5 @@
 open Core
 
-let parse_input raw_txt =
-  let lines =
-    (*Split on lines*)
-    String.split_on_char '\n' raw_txt
-    (*Get rid of any empty lines*)
-    |> List.filter (fun x -> x <> "")
-    (*Then split on any whitespace in each line*)
-    |> List.map split_on_whitespace
-  in
-  lines
-  (*Turn columns to rows*)
-  |> transpose
-  (*Flip horizontally, makes pattern matching easier later*)
-  |> List.map List.rev
-
 let get_accumulator_fn x =
   match x with
   | "+" -> List.fold_left ( + ) 0
@@ -26,13 +11,10 @@ let get_answer curr_list =
   | x :: xs -> (get_accumulator_fn x) (List.map int_of_string xs)
   | _ -> 0
 
-let rec unsnoc = function
-  | [] -> failwith "Empty list!"
-  | [ x ] -> (x, [])
-  | x :: xs ->
-      let last, rest = unsnoc xs in
-      (last, x :: rest)
-
+(*
+Turns a list of strings with empty elements to a 
+list of list of strings split on those empty elements
+*)
 let split_on_empty string_list =
   let rec aux curr_list curr_acc acc =
     match curr_list with
@@ -49,6 +31,7 @@ let split_on_empty string_list =
   (* Compute and then reverse the final result so groups are in correct order *)
   List.rev (aux string_list [] [])
 
+(*Kind of like a zip, takes prepends the elements of [ys] individually to lists of [xs]*)
 let prepend_each (ys : string list) (xs : string list list) =
   let rec aux xs ys acc =
     match (xs, ys) with
@@ -58,13 +41,23 @@ let prepend_each (ys : string list) (xs : string list list) =
   in
   aux xs ys []
 
-let new_parse raw_txt =
-  let lines =
-    String.split_on_char '\n' raw_txt |> List.filter (fun x -> x <> "")
-  in
-  let last_row, rest = unsnoc lines in
+let part_1_parser lines =
+  (*Then split on any whitespace in each line*)
+  let rows = List.map split_on_whitespace lines in
+  rows
+  (*Turn columns to rows*)
+  |> transpose
+  (*Flip horizontally, makes pattern matching easier later*)
+  |> List.map List.rev
+
+let part_2_parser lines =
+  (*
+  Pull out the operators to add back in later, 
+  makes transpose and splitting easier
+  *)
+  let operators, rest = last_and_rest lines in
   rest
-  (*Turn string[] to char[][]*)
+  (*Turn list of string to list of list of chars*)
   |> List.map explode
   (*Transpose it*)
   |> transpose
@@ -75,10 +68,10 @@ let new_parse raw_txt =
   (*Turn string[] to string[][] by splitting on empty string*)
   |> split_on_empty
   (*Prepend each of the operators*)
-  |> prepend_each (split_on_whitespace last_row)
+  |> prepend_each (split_on_whitespace operators)
 
 let part_maker parser_fn raw_input =
-  raw_input
+  raw_input |> split_lines
   (*Parse input based on part*)
   |> parser_fn
   (*Do the sums*)
@@ -86,5 +79,5 @@ let part_maker parser_fn raw_input =
   (*Use sum to accumulate the answer*)
   |> sum
 
-let part_1 = part_maker parse_input
-let part_2 = part_maker new_parse
+let part_1 = part_maker part_1_parser
+let part_2 = part_maker part_2_parser

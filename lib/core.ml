@@ -138,4 +138,18 @@ let rec transpose list =
 
 (*Flip a list of list horizontally*)
 let flip_horizontal xss = List.map List.rev xss
+
+(*Split a string on any whitespace*)
 let split_on_whitespace = Str.split (Str.regexp "[ \n\r\x0c\t]+")
+
+(*Returns the last element and the rest of the list*)
+let rec last_and_rest = function
+  | [] -> failwith "Empty list!"
+  | [ x ] -> (x, [])
+  | x :: xs ->
+      let last, rest = last_and_rest xs in
+      (last, x :: rest)
+
+(*Split a string by new lines, removes any empty lines*)
+let split_lines raw_txt =
+  String.split_on_char '\n' raw_txt |> List.filter (fun x -> x <> "")
