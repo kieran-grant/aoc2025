@@ -153,3 +153,8 @@ let rec last_and_rest = function
 (*Split a string by new lines, removes any empty lines*)
 let split_lines raw_txt =
   String.split_on_char '\n' raw_txt |> List.filter (fun x -> x <> "")
+
+let indices_of_char c s =
+  String.to_seqi s
+  |> Seq.fold_left (fun acc (i, ch) -> if ch = c then i :: acc else acc) []
+  |> List.rev
