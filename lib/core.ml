@@ -158,3 +158,12 @@ let indices_of_char c s =
   String.to_seqi s
   |> Seq.fold_left (fun acc (i, ch) -> if ch = c then i :: acc else acc) []
   |> List.rev
+
+(*Get all unordered unique pairs from a list of elements*)
+let rec pairs = function
+  | [] -> []
+  | x :: xs ->
+      (*all pairs where x is paired with each element of xs*)
+      let with_x = List.map (fun y -> (x, y)) xs in
+      (*plus all pairs that come from the tail*)
+      with_x @ pairs xs

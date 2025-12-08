@@ -10,14 +10,6 @@ let to_point3d lst =
   | [ x; y; z ] -> (x, y, z)
   | _ -> failwith "The given list cannot be converted to a 3d point"
 
-let rec pairs = function
-  | [] -> []
-  | x :: xs ->
-      (* all pairs where x is paired with each element of xs *)
-      let with_x = List.map (fun y -> (x, y)) xs in
-      (* plus all pairs that come from the tail *)
-      with_x @ pairs xs
-
 let parse_input raw_input =
   split_lines raw_input
   |> List.map (String.split_on_char ',')
@@ -54,11 +46,11 @@ let get_member_idx (sets : Point3DSet.t list) (item : point3d) =
   in
   aux sets item 0
 
-(* Add point to set at index *)
+(*Add point to set at index*)
 let add_to_set_at_idx circuits idx point =
   List.mapi (fun i s -> if i = idx then Point3DSet.add point s else s) circuits
 
-(* Merge sets at indices i and j and return the updated list *)
+(*Merge sets at indices i and j and return the updated list*)
 let merge_sets_at_indices circuits i j =
   if i = j then circuits
   else
@@ -70,30 +62,29 @@ let merge_sets_at_indices circuits i j =
     |> List.mapi (fun k s -> if k = j then Point3DSet.empty else s)
     |> List.filter (fun s -> not (Point3DSet.is_empty s))
 
+let process_pair circuits (a, b) =
+  let member_checker = get_member_idx circuits in
+  match (member_checker a, member_checker b) with
+  (*Neither point in a set => Create new set*)
+  | None, None -> Point3DSet.of_list [ a; b ] :: circuits
+  (*Both points already in sets => Merge sets*)
+  | Some i, Some j -> merge_sets_at_indices circuits i j
+  (*One point is in a set, the other is not => add singleton to set*)
+  | Some i, None -> add_to_set_at_idx circuits i b
+  | None, Some j -> add_to_set_at_idx circuits j a
+
 let get_circuits (pairs : (point3d * point3d) list) =
-  let rec aux remaining_pairs (circuits : Point3DSet.t list) =
+  let rec aux remaining_pairs circuits =
     match remaining_pairs with
     | [] -> circuits
-    | (a, b) :: ps -> (
-        let member_checker = get_member_idx circuits in
-        match (member_checker a, member_checker b) with
-        (*Points aren't part of any set, create a new one with those points in it*)
-        | None, None -> aux ps (Point3DSet.of_list [ a; b ] :: circuits)
-        (*Points are contained in two separate sets, should merge them*)
-        | Some i, Some j ->
-            if i = j then aux ps circuits
-            else aux ps (merge_sets_at_indices circuits i j)
-        (*Point a in a set but point b isn't, add b to a's set*)
-        | Some i, None -> aux ps (add_to_set_at_idx circuits i b)
-        | None, Some j -> aux ps (add_to_set_at_idx circuits j a))
+    | p :: ps ->
+        let new_circuits = process_pair circuits p in
+        aux ps new_circuits
   in
   aux pairs []
 
 let get_circuits_2 (pairs : (point3d * point3d) list) (n_points : int) =
-  (*At each iteration, we check if:
-  - We have a most recent pair (true in all but the first iteration)
-  - There is only one set left and that set has all the points in it
-  *)
+  (* Helper to check if the solution has been found *)
   let answer circuits most_recent_pair =
     match most_recent_pair with
     | None -> None
@@ -106,53 +97,49 @@ let get_circuits_2 (pairs : (point3d * point3d) list) (n_points : int) =
   in
 
   let rec aux remaining_pairs circuits most_recent_pair =
-    (*If we have an answer return it*)
+    (* If we have an answer return it *)
     match answer circuits most_recent_pair with
     | Some pair -> pair
     | None -> (
         match remaining_pairs with
-        (*Have checked all pairs, but don't have all the points - something has gone wrong!*)
+        (* Have checked all pairs, but don't have all the points - something has gone wrong! *)
         | [] -> failwith "Ran out of pairs before full merge!"
-        | (a, b) :: ps -> (
-            (*Check whether the points exist in any sets*)
-            let member_checker = get_member_idx circuits in
-            match (member_checker a, member_checker b) with
-            (*If they don't, create a set with just those points and continue*)
-            | None, None ->
-                let new_circuit = Point3DSet.of_list [ a; b ] in
-                aux ps (new_circuit :: circuits) (Some (a, b))
-            (*They are both in sets*)
-            | Some i, Some j ->
-                (*They are already in the same set (maybe via a previous merge), just continue*)
-                if i = j then aux ps circuits most_recent_pair
-                (*They are in different sets, merge them*)
-                  else
-                  let new_list = merge_sets_at_indices circuits i j in
-                  aux ps new_list (Some (a, b))
-            (*One is in a set, but the other isn't => add the singleton to the set*)
-            | Some i, None ->
-                let updated_circuits = add_to_set_at_idx circuits i b in
-                aux ps updated_circuits (Some (a, b))
-            | None, Some j ->
-                let updated_circuits = add_to_set_at_idx circuits j a in
-                aux ps updated_circuits (Some (a, b))))
+        | p :: ps ->
+            let new_circuits = process_pair circuits p in
+            (* Continue, updating the most recent pair seen *)
+            aux ps new_circuits (Some p))
   in
   aux pairs [] None
 
+let part_1 raw_input n_shortest =
+  let parsed = parse_input raw_input in
+  (*Order pairs of points by ascending distance*)
+  let sorted = get_pairs_by_distance parsed in
+  (*Take the first [n_shortest] distances and group them into circuits*)
+  let circuits = get_circuits (List.take n_shortest sorted) in
+  let largest_sets =
+    (*Get the sizes of each set*)
+    List.map Point3DSet.cardinal circuits
+    (*Order ascending*)
+    |> List.sort compare
+    (*Reverse list (order descending)*)
+    |> List.rev
+    (*Get the top 3 biggest sets*)
+    |> List.take 3
+  in
+  (*Get the product of the top 3 biggest sets*)
+  List.fold_left ( * ) 1 largest_sets
+
 let part_2 raw_input =
   let parsed = parse_input raw_input in
+  (*Order pairs of points by ascending distance*)
   let sorted_pairs = get_pairs_by_distance parsed in
+  (*
+  Get the final two points that, when merged, create a single 
+  circuit (of size |number of points|) and grab the x-coords
+  *)
   let (x1, _, _), (x2, _, _) =
     get_circuits_2 sorted_pairs (List.length parsed)
   in
+  (*Return the product of the x-coords*)
   int_of_float (x1 *. x2)
-
-let part_1 raw_input n_shortest =
-  let parsed = parse_input raw_input in
-  let sorted = get_pairs_by_distance parsed in
-  let circuits = get_circuits (List.take n_shortest sorted) in
-  let cardinalities = List.map Point3DSet.cardinal circuits in
-  let largest_sets =
-    cardinalities |> List.sort compare |> List.rev |> List.take 3
-  in
-  List.fold_left ( * ) 1 largest_sets
