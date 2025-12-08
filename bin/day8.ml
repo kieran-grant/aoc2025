@@ -21,11 +21,12 @@ let sample =
 425,690,689|}
 
 let _ =
-  let open Aoc2025.Core in
   let open Aoc2025.Day8 in
-  let parsed = parse_input sample in
-  let sorted = get_pairs_by_distance parsed in
+  let open Aoc2025.Core in
+  let input = read_file "inputs/8.txt" in
+  let sample_sol_1 = part_1 sample 10 in
+  let sol_1 = part_1 input 1000 in
 
-  print_list print_point3d parsed;
-  print_endline "";
-  print_list print_point3d_pair sorted
+  (* print_list print_int sample_sol_1 *)
+  Printf.printf "Part 1 (sample): %d\n" sample_sol_1;
+  Printf.printf "Part 1: %d\n" sol_1
