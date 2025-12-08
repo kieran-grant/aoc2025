@@ -26,7 +26,11 @@ let _ =
   let input = read_file "inputs/8.txt" in
   let sample_sol_1 = part_1 sample 10 in
   let sol_1 = part_1 input 1000 in
+  let sample_sol_2 = part_2 sample in
+  let sol_2 = part_2 input in
 
   (* print_list print_int sample_sol_1 *)
   Printf.printf "Part 1 (sample): %d\n" sample_sol_1;
-  Printf.printf "Part 1: %d\n" sol_1
+  Printf.printf "Part 1: %d\n" sol_1;
+  Printf.printf "Part 2 (sample): %d\n" sample_sol_2;
+  Printf.printf "Part 2: %d\n" sol_2
