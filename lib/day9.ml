@@ -1,16 +1,22 @@
 open Core
 
+(* Note: 'range' and 'split_lines' are typically from a library (like Core or Batteries).
+   Assuming you have a standard library version of these, or have implemented them.
+   If not, you may need to define them for the code to compile.
+   I will use List.map, List.fold_left, etc. which are standard.
+*)
+
 let rec_size ((a, b) : int * int) ((x, y) : int * int) =
   (abs (x - a) + 1) * (abs (y - b) + 1)
 
 let to_coord lst =
   match lst with
   | [ x; y ] -> (x, y)
-  | _ -> failwith "The given list cannot be converted to a 3d point"
+  | _ -> failwith "The given list cannot be converted to a 2d point"
 
 let parse_input raw_input =
   split_lines raw_input
-  |> List.map (String.split_on_char ',')
+  |> List.map (fun s -> String.split_on_char ',' s)
   |> List.map (List.map int_of_string)
   |> List.map to_coord
 
@@ -34,3 +40,110 @@ let part_1 raw_input =
   |> get_sizes
   (*Get the biggest size*)
   |> get_max_size
+
+(*Part 2 helpers*)
+module PairOrd = struct
+  type t = int * int
+
+  let compare (a1, b1) (a2, b2) =
+    let c = compare a1 a2 in
+    if c <> 0 then c else compare b1 b2
+end
+
+module PairSet = Set.Make (PairOrd)
+
+let gen start finish f =
+  (* Assuming 'range' is available and works as 'List.init' or similar *)
+  range start (finish + 1) |> List.map f |> PairSet.of_list
+
+let points_between (a, b) (x, y) =
+  if a = x then gen (min b y) (max b y) (fun v -> (a, v)) (* vertical *)
+  else if b = y then gen (min a x) (max a x) (fun v -> (v, b)) (* horizontal *)
+  else failwith "row or column does not match"
+
+let generate_boundary_set = function
+  | [] | [ _ ] -> failwith "Need at least two vertices"
+  | init :: rest ->
+      let rec aux vertices acc =
+        match vertices with
+        | [ x ] -> PairSet.union acc (points_between x init)
+        | x :: y :: xs -> aux (y :: xs) (PairSet.union acc (points_between x y))
+        | _ -> failwith "Impossible state"
+      in
+      aux (init :: rest) PairSet.empty
+
+let rectangle_points_list (x1, y1) (x2, y2) =
+  let xs = range (min x1 x2) (max x1 x2 + 1) in
+  let ys = range (min y1 y2) (max y1 y2 + 1) in
+  List.concat (List.map (fun x -> List.map (fun y -> (x, y)) ys) xs)
+
+let is_inside boundary_set (x, y) =
+  (* Get all boundary points on the same row *)
+  let row_points =
+    PairSet.elements boundary_set
+    |> List.filter (fun (_, by) -> by = y)
+    |> List.map fst |> List.sort compare
+  in
+
+  (* Count number of segments to the left of x *)
+  let rec count_segments lst acc =
+    match lst with
+    | [] -> acc
+    | [ _ ] -> acc
+    | a :: b :: rest ->
+        if x > a && x <= b then
+          (* x is between a and b -> inside *)
+          acc + 1
+        else count_segments (b :: rest) acc
+  in
+  let count = count_segments row_points 0 in
+  let is_odd = count mod 2 <> 0 in
+  is_odd
+
+let is_inside_or_on_boundary boundary_set (x, y) =
+  (*check if point lies on the boundry, if not check the number of crossings*)
+  PairSet.mem (x, y) boundary_set || is_inside boundary_set (x, y)
+
+let is_rectangle_inside_boundary boundary_set rectangle_points =
+  let result =
+    List.for_all (is_inside_or_on_boundary boundary_set) rectangle_points
+  in
+
+  result
+
+let get_ordered_sizes pairs =
+  let ordered =
+    pairs
+    (*get sizes*)
+    |> get_sizes
+    (*sort by sizes increasing*)
+    |> List.sort (fun (_, d1) (_, d2) -> compare d1 d2)
+    (*sort by sizes decreasing*)
+    |> List.rev
+  in
+  ordered
+
+let part_2 raw_text =
+  let parsed_input = parse_input raw_text in
+  let boundary_set = generate_boundary_set parsed_input in
+
+  let rec aux pairs_and_sizes =
+    match pairs_and_sizes with
+    | [] -> failwith "Something went wrong! No points left"
+    | ((vertice_a, vertice_b), size) :: ps ->
+        let generated_rectangle = rectangle_points_list vertice_a vertice_b in
+
+        if is_rectangle_inside_boundary boundary_set generated_rectangle then
+          size
+        else aux ps
+  in
+
+  let ordered_sizes =
+    parsed_input
+    (*Generate pairs*)
+    |> pairs (* Assumes 'pairs' is defined elsewhere *)
+    (*Get sizes of each rectangle*)
+    |> get_ordered_sizes
+  in
+
+  aux ordered_sizes
