@@ -34,7 +34,12 @@ let divisors n =
     in
     List.rev (aux 1 [])
 
-let range a b = List.init (b - a) (( + ) a)
+let range a b =
+  let start = min a b in
+  let finish = max a b in
+  if finish < start then []
+  else List.init (finish - start + 1) (fun i -> start + i)
+
 let rec sum l = match l with [] -> 0 | hd :: tl -> hd + sum tl
 
 (**[explode s] takes in a string and returns it as a list of char*)

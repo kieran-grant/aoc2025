@@ -13,8 +13,8 @@ let _ =
   let input = read_file "inputs/9.txt" in
   let sample_sol_1 = part_1 sample in
   let sol_1 = part_1 input in
-  let sample_sol_2 = part_2' sample in
-  let sol_2 = part_2' input in
+  let sample_sol_2 = part_2 sample in
+  let sol_2 = part_2 input in
 
   Printf.printf "Part 1 (sample): %d\n" sample_sol_1;
   Printf.printf "Part 1: %d\n" sol_1;
