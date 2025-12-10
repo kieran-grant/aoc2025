@@ -1,5 +1,5 @@
 (library
  (name aoc2025)
- (libraries str))
+ (libraries str z3))
 
 

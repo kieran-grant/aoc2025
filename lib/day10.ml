@@ -141,95 +141,85 @@ let part_1 raw_text =
   |> List.map parse_line_to_record
   |> List.map get_shortest_path |> sum
 
-(*Part 2*)
+(*Part 2, treat it as a ILP problem, 
+we are looking for Ax = b where b is the target, A is the configuration of our buttons and 
+x is the number of presses that we need with the contraint that 
+all x_i >= 0 and we find the min(sum(x)) s.t. the equation holds*)
 
-let increment_multiple_factory idxs counter =
-  let idxs_set = List.sort compare idxs in
-  let rec aux i ctr idxs =
-    match (ctr, idxs) with
-    | [], _ -> []
-    | x :: xs, [] -> x :: aux (i + 1) xs [] (* no more indices to increment *)
-    | x :: xs, j :: js when i = j -> (x + 1) :: aux (i + 1) xs js
-    | x :: xs, _ -> x :: aux (i + 1) xs idxs
+open Z3
+
+(* Convert a button list into a 0/1 matrix: rows = counters, cols = buttons *)
+let build_matrix buttons n =
+  Array.of_list
+    (List.map
+       (fun button ->
+         Array.init n (fun i -> if List.mem i button then 1 else 0))
+       buttons)
+
+(* Solve minimal button presses using Z3 *)
+let solve_z3_ilp buttons target =
+  let ctx = mk_context [] in
+  let n = List.length target in
+  let m = List.length buttons in
+  let a = build_matrix buttons n in
+
+  (* Create integer variables x0..xm-1 *)
+  let vars =
+    Array.init m (fun i ->
+        Arithmetic.Integer.mk_const_s ctx ("x" ^ string_of_int i))
   in
-  aux 0 counter idxs_set
 
-let create_initial_counter len = List.init len (fun _ -> 0)
+  (* Create optimizer *)
+  let opt = Optimize.mk_opt ctx in
+  ignore (Optimize.minimize opt (Arithmetic.mk_add ctx (Array.to_list vars)));
 
-let create_inc_functions (buttons : int list list) =
-  List.map increment_multiple_factory buttons
+  (* Constraints: x >= 0 *)
+  Array.iter
+    (fun v ->
+      Optimize.add opt
+        [ Arithmetic.mk_ge ctx v (Arithmetic.Integer.mk_numeral_i ctx 0) ])
+    vars;
 
-(* Each state in the queue: current string, last function index used, path of function indices *)
-type pt2_bfs_state = {
-  current : int list;
-  last_func : int option; (* None for initial state *)
-  path : int list; (* indices of functions applied so far *)
-}
+  (* Constraints: A * x = target for each counter *)
+  for i = 0 to n - 1 do
+    let row_sum =
+      Array.fold_left
+        (fun acc j ->
+          Arithmetic.mk_add ctx
+            [
+              acc;
+              Arithmetic.mk_mul ctx
+                [ Arithmetic.Integer.mk_numeral_i ctx a.(j).(i); vars.(j) ];
+            ])
+        (Arithmetic.Integer.mk_numeral_i ctx 0)
+        (Array.init m (fun j -> j))
+    in
+    Optimize.add opt
+      [
+        Boolean.mk_eq ctx row_sum
+          (Arithmetic.Integer.mk_numeral_i ctx (List.nth target i));
+      ]
+  done;
 
-let all_leq l1 l2 =
-  try List.for_all2 (fun x y -> x <= y) l1 l2
-  with Invalid_argument _ -> failwith "lists have different lengths"
+  (* Solve *)
+  match Optimize.check opt with
+  | SATISFIABLE ->
+      let model = Optimize.get_model opt |> Option.get in
+      Array.to_list
+        (Array.map
+           (fun v ->
+             match Model.eval model v true with
+             | Some n -> int_of_string (Expr.to_string n)
+             | None -> 0)
+           vars)
+  | _ -> failwith "No solution found"
 
-let generate_next_states_2 functions (target : int list) (state : pt2_bfs_state)
-    =
-  List.mapi
-    (fun idx f ->
-      (*Apply the function to the string*)
-      let new_counter = f state.current in
-      (*If all the parts are less than or equal, then it is a valid state*)
-      if all_leq new_counter target then
-        Some
-          {
-            current = new_counter;
-            last_func = Some idx;
-            path = idx :: state.path;
-          }
-      else None)
-    functions (*Do this over all our functions*)
-  (* Turn list of option state into list of state by filtering out None*)
-  |> List.filter_map Fun.id
-
-let bfs_2 line =
-  let initial =
-    create_initial_counter (List.length line.joltage_requirements)
-  in
-  let target = line.joltage_requirements in
-  let functions = create_inc_functions line.buttons in
-  let next_state_generator = generate_next_states_2 functions target in
-  let visited = Hashtbl.create 100 in
-
-  let rec loop queue =
-    match queue with
-    | [] -> None
-    | state :: rest ->
-        if Hashtbl.mem visited state.current then loop rest
-        else begin
-          Hashtbl.add visited state.current ();
-          if state.current = target then Some (List.rev state.path)
-          else
-            let next_states = next_state_generator state in
-            loop (rest @ next_states)
-        end
-  in
-  loop [ { current = initial; last_func = None; path = [] } ]
-
+(* Wrapper: sum of presses *)
 let get_shortest_path_2 record =
-  match bfs_2 record with
-  | None ->
-      failwith ("No path possible for target string: " ^ record.indicator_target)
-  | Some path -> List.length path
+  let x = solve_z3_ilp record.buttons record.joltage_requirements in
+  List.fold_left ( + ) 0 x
 
-(* let part_2 raw_text = *)
-(*   raw_text |> split_lines *)
-(*   |> List.map parse_line_to_record *)
-(*   |> List.map get_shortest_path_2 *)
-(*   |> sum *)
-
+(* Part 2 over multiple lines *)
 let part_2 raw_text =
   let lines = raw_text |> split_lines |> List.map parse_line_to_record in
-  let total = List.length lines in
-  lines
-  |> List.mapi (fun idx record ->
-      Printf.printf "Processing line %d/%d\n%!" (idx + 1) total;
-      get_shortest_path_2 record)
-  |> sum
+  lines |> List.map (fun record -> get_shortest_path_2 record) |> sum

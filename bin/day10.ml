@@ -10,10 +10,10 @@ let _ =
   let sample_sol_1 = part_1 sample in
   let sol_1 = part_1 input in
   let sample_sol_2 = part_2 sample in
-  (* let sol_2 = part_2 input in *)
+  let sol_2 = part_2 input in
 
   (*Print solutions*)
   Printf.printf "Part 1 (sample): %d\n" sample_sol_1;
   Printf.printf "Part 1: %d\n" sol_1;
-  Printf.printf "Part 2 (sample): %d\n" sample_sol_2
-(* Printf.printf "Part 2: %d\n" sol_2 *)
+  Printf.printf "Part 2 (sample): %d\n" sample_sol_2;
+  Printf.printf "Part 2: %d\n" sol_2
