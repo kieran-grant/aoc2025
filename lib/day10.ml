@@ -2,7 +2,8 @@ open Core
 
 type line_record = {
   indicator_target : string;
-  buttons : int list list; (* joltage_requirements : int list; *)
+  buttons : int list list;
+  joltage_requirements : int list;
 }
 
 let parse_line_to_record s =
@@ -26,7 +27,7 @@ let parse_line_to_record s =
   in
 
   (* All parts that are buttons: start from second until we hit a part starting with { *)
-  let buttons, _ (*joltage_part*) =
+  let buttons, joltage_part =
     let rec aux acc = function
       | [] -> (List.rev acc, None)
       | p :: ps ->
@@ -37,13 +38,15 @@ let parse_line_to_record s =
   in
 
   (* Parse joltage requirements *)
-  (* let joltage_requirements = *)
-  (*   match joltage_part with *)
-  (*   | Some jp -> *)
-  (*       strip_brackets jp |> String.split_on_char ',' |> List.map int_of_string *)
-  (*   | None -> [] *)
-  (* in *)
-  { indicator_target; buttons (* joltage_requirements  *) }
+  let joltage_requirements =
+    match joltage_part with
+    | Some jp ->
+        strip_brackets jp |> String.split_on_char ',' |> List.map int_of_string
+    | None -> []
+  in
+  { indicator_target; buttons; joltage_requirements }
+
+(*Part 1*)
 
 let toggle c = if c = '.' then '#' else if c = '#' then '.' else c
 
@@ -137,3 +140,96 @@ let part_1 raw_text =
   raw_text |> split_lines
   |> List.map parse_line_to_record
   |> List.map get_shortest_path |> sum
+
+(*Part 2*)
+
+let increment_multiple_factory idxs counter =
+  let idxs_set = List.sort compare idxs in
+  let rec aux i ctr idxs =
+    match (ctr, idxs) with
+    | [], _ -> []
+    | x :: xs, [] -> x :: aux (i + 1) xs [] (* no more indices to increment *)
+    | x :: xs, j :: js when i = j -> (x + 1) :: aux (i + 1) xs js
+    | x :: xs, _ -> x :: aux (i + 1) xs idxs
+  in
+  aux 0 counter idxs_set
+
+let create_initial_counter len = List.init len (fun _ -> 0)
+
+let create_inc_functions (buttons : int list list) =
+  List.map increment_multiple_factory buttons
+
+(* Each state in the queue: current string, last function index used, path of function indices *)
+type pt2_bfs_state = {
+  current : int list;
+  last_func : int option; (* None for initial state *)
+  path : int list; (* indices of functions applied so far *)
+}
+
+let all_leq l1 l2 =
+  try List.for_all2 (fun x y -> x <= y) l1 l2
+  with Invalid_argument _ -> failwith "lists have different lengths"
+
+let generate_next_states_2 functions (target : int list) (state : pt2_bfs_state)
+    =
+  List.mapi
+    (fun idx f ->
+      (*Apply the function to the string*)
+      let new_counter = f state.current in
+      (*If all the parts are less than or equal, then it is a valid state*)
+      if all_leq new_counter target then
+        Some
+          {
+            current = new_counter;
+            last_func = Some idx;
+            path = idx :: state.path;
+          }
+      else None)
+    functions (*Do this over all our functions*)
+  (* Turn list of option state into list of state by filtering out None*)
+  |> List.filter_map Fun.id
+
+let bfs_2 line =
+  let initial =
+    create_initial_counter (List.length line.joltage_requirements)
+  in
+  let target = line.joltage_requirements in
+  let functions = create_inc_functions line.buttons in
+  let next_state_generator = generate_next_states_2 functions target in
+  let visited = Hashtbl.create 100 in
+
+  let rec loop queue =
+    match queue with
+    | [] -> None
+    | state :: rest ->
+        if Hashtbl.mem visited state.current then loop rest
+        else begin
+          Hashtbl.add visited state.current ();
+          if state.current = target then Some (List.rev state.path)
+          else
+            let next_states = next_state_generator state in
+            loop (rest @ next_states)
+        end
+  in
+  loop [ { current = initial; last_func = None; path = [] } ]
+
+let get_shortest_path_2 record =
+  match bfs_2 record with
+  | None ->
+      failwith ("No path possible for target string: " ^ record.indicator_target)
+  | Some path -> List.length path
+
+(* let part_2 raw_text = *)
+(*   raw_text |> split_lines *)
+(*   |> List.map parse_line_to_record *)
+(*   |> List.map get_shortest_path_2 *)
+(*   |> sum *)
+
+let part_2 raw_text =
+  let lines = raw_text |> split_lines |> List.map parse_line_to_record in
+  let total = List.length lines in
+  lines
+  |> List.mapi (fun idx record ->
+      Printf.printf "Processing line %d/%d\n%!" (idx + 1) total;
+      get_shortest_path_2 record)
+  |> sum
