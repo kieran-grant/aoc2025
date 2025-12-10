@@ -11,11 +11,11 @@ let sample = {|3-5
 32|}
 
 let () =
-  let open Aoc2025.Day5 in
+  let open Aoc2025.Day05 in
   let open Aoc2025.Core in
   (*Read inputs*)
   let sample_ranges, sample_ids = split_on_blank_line sample in
-  let ranges, ids = read_file "inputs/5.txt" |> split_on_blank_line in
+  let ranges, ids = read_file "inputs/05.txt" |> split_on_blank_line in
 
   (*Solve*)
   let sample_sol_1 = part_1 sample_ranges sample_ids in

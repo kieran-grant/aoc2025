@@ -17,11 +17,11 @@ let sample =
 ...............|}
 
 let () =
-  let open Aoc2025.Day7 in
+  let open Aoc2025.Day07 in
   let open Aoc2025.Core in
   (*Read inputs*)
   let sample_lines = split_lines sample in
-  let input_txt = split_lines (read_file "inputs/7.txt") in
+  let input_txt = split_lines (read_file "inputs/07.txt") in
 
   (*Solve*)
   let sample_sol_1 = part_1 sample_lines in

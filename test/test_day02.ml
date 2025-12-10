@@ -1,5 +1,5 @@
 open OUnit2
-open Aoc2025.Day2
+open Aoc2025.Day02
 
 (* --- Helpers ---------------------------------------------------------- *)
 
@@ -11,10 +11,6 @@ let make_split_test name input expected =
 
 let string_of_int_list lst =
   "[" ^ String.concat "; " (List.map string_of_int lst) ^ "]"
-
-let make_parse_range_test name input expected =
-  name >:: fun _ ->
-  assert_equal expected (parse_range input) ~printer:string_of_int_list
 
 let make_bool_test name f input expected =
   name >:: fun _ -> assert_equal expected (f input) ~printer:string_of_bool
@@ -37,15 +33,6 @@ let split_tests =
          make_split_test "splits number with 2 digits" "55" ("5", "5");
          make_split_test "splits number with 6 digits" "123123" ("123", "123");
          make_split_test "splits number with 5 digits" "12312" ("12", "312");
-       ]
-
-let parse_range_tests =
-  "parse_range tests"
-  >::: [
-         make_parse_range_test "basic 1-4" "1-4" [ 1; 2; 3; 4 ];
-         make_parse_range_test "5-5 yields empty" "5-5" [ 5 ];
-         make_parse_range_test "0-3 example" "0-3" [ 0; 1; 2; 3 ];
-         make_parse_range_test "10-13 example" "10-13" [ 10; 11; 12; 13 ];
        ]
 
 let count_digits_tests =
@@ -207,7 +194,6 @@ let tests =
   "All tests"
   >::: [
          split_tests;
-         parse_range_tests;
          count_digits_tests;
          chunk_string_tests;
          are_all_equal_subsequences_tests;

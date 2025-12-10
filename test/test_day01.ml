@@ -1,5 +1,5 @@
 open OUnit2
-open Aoc2025.Day1
+open Aoc2025.Day01
 
 let to_string_from_pair pair =
   "(" ^ string_of_int (fst pair) ^ ", " ^ string_of_int (snd pair) ^ ")"

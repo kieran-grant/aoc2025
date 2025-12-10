@@ -6,9 +6,9 @@ let sample = {|123 328  51 64
 *   +   *   +  |}
 
 let () =
-  let open Aoc2025.Day6 in
+  let open Aoc2025.Day06 in
   (*Read inputs*)
-  let input_txt = read_file "inputs/6.txt" in
+  let input_txt = read_file "inputs/06.txt" in
 
   (*Solve*)
   let sample_sol_1 = part_1 sample in

@@ -3,18 +3,18 @@
  (libraries ounit2 aoc2025))
 
 (test
- (name test_day1)
+ (name test_day01)
  (libraries ounit2 aoc2025))
 
 (test
- (name test_day2)
+ (name test_day02)
  (libraries ounit2 aoc2025))
 
 (test
- (name test_day3)
+ (name test_day03)
  (libraries ounit2 aoc2025))
 
 
 (test
- (name test_day5)
+ (name test_day05)
  (libraries ounit2 aoc2025))

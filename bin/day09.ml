@@ -8,9 +8,9 @@ let sample = {|7,1
 7,3|}
 
 let _ =
-  let open Aoc2025.Day9 in
+  let open Aoc2025.Day09 in
   let open Aoc2025.Core in
-  let input = read_file "inputs/9.txt" in
+  let input = read_file "inputs/09.txt" in
   let sample_sol_1 = part_1 sample in
   let sol_1 = part_1 input in
   let sample_sol_2 = part_2 sample in
