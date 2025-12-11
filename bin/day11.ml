@@ -32,7 +32,7 @@ let _ =
 
   let sample_sol_1 = part_1 sample_1 in
   let sol_1 = part_1 input in
-  let sample_sol_2 = part_2' sample_2 in
+  let sample_sol_2 = part_2 sample_2 in
   let sol_2 = part_2 input in
 
   (*Print solutions*)
