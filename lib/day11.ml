@@ -58,6 +58,39 @@ let find_paths (start : string) (target : string) adj_map =
   in
   dfs start
 
+let find_num_paths_2 (start : string) (target : string) adj_map =
+  (* Memo table key includes all state that affects the result *)
+  let memo : (string * bool * bool, int) Hashtbl.t = Hashtbl.create 64 in
+
+  let rec dfs node seen_dac seen_fft =
+    (* If we hit the target AND have seen both required nodes, it's a valid path *)
+    if node = target then if seen_dac && seen_fft then 1 else 0
+    else
+      let key = (node, seen_dac, seen_fft) in
+      match Hashtbl.find_opt memo key with
+      | Some n -> n
+      | None ->
+          let new_seen_dac = seen_dac || node = "dac" in
+          let new_seen_fft = seen_fft || node = "fft" in
+
+          let neighbors =
+            match StringMap.find_opt node adj_map with
+            | Some ls -> ls
+            | None -> failwith ("Node " ^ node ^ " could not be found!")
+          in
+
+          let total =
+            List.fold_left
+              (fun acc neigh -> acc + dfs neigh new_seen_dac new_seen_fft)
+              0 neighbors
+          in
+
+          Hashtbl.add memo key total;
+          total
+  in
+
+  dfs start false false
+
 (* (* Print a single path as "A -> B -> C" *) *)
 (* let print_path path = *)
 (*   match path with *)
@@ -95,3 +128,5 @@ let part_1 raw_text = raw_text |> parse_input |> find_num_paths "you" "out"
 let part_2 raw_text =
   raw_text |> parse_input |> find_paths "svr" "out" |> get_valid_paths
   |> List.length
+
+let part_2' raw_text = raw_text |> parse_input |> find_num_paths_2 "svr" "out"
