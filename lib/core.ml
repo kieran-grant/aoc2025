@@ -134,6 +134,19 @@ let split_on_blank_line s =
   in
   aux [] lines
 
+(* Split input into blocks separated by blank lines *)
+let split_blocks (text : string) : string list =
+  text
+  |> Str.split (Str.regexp "\n[ \t]*\n") (* split on empty lines *)
+  |> List.map String.trim
+  |> List.filter (fun s -> s <> "")
+
+(* Get the last block *)
+let last_block (text : string) : string =
+  match List.rev (split_blocks text) with
+  | last :: _ -> last
+  | [] -> failwith "No blocks found"
+
 (*transpose a list of lists*)
 let rec transpose list =
   match list with
